@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador de YouTube</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 { color: #38bdf8; }
+        input { width: 60%; padding: 10px; font-size: 16px; margin: 10px 0; border-radius: 10px; border: none; outline: none; }
+        button { background-color: #2563eb; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 10px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #1d4ed8; }
+        a { color: #10b981; font-weight: bold; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+    <h1>🎬 Descargador de YouTube</h1>
+    <input type="text" id="url" placeholder="Pega aquí el enlace de YouTube">
+    <div>
+        <button onclick="descargar('video')">Descargar Video (MP4)</button>
+        <button onclick="descargar('audio')">Descargar Música (MP3)</button>
+    </div>
+
+    <p id="estado"></p>
+    <a id="enlace" href="#" download style="display:none;">⬇️ Descargar Archivo</a>
+
+    <script>
+        async function descargar(tipo) {
+            const url = document.getElementById('url').value;
+            const estado = document.getElementById('estado');
+            const enlace = document.getElementById('enlace');
+
+            if (!url) {
+                estado.innerText = "⚠️ Por favor, pega una URL primero.";
+                return;
+            }
+
+            estado.innerText = "⏳ Procesando...";
+            enlace.style.display = "none";
+
+            const respuesta = await fetch("/descargar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: url, tipo: tipo })
+            });
+
+            const data = await respuesta.json();
+            estado.innerText = data.mensaje;
+
+            if (data.link) {
+                enlace.href = data.link;
+                enlace.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
