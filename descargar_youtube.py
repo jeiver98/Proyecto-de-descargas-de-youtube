@@ -1,29 +1,27 @@
-# descargar_youtube.py
-from yt_dlp import YoutubeDL
+import yt_dlp
 import os
 
-def descargar_video(url, carpeta):
+def descargar_video(url, carpeta_descarga):
     ydl_opts = {
-        'outtmpl': os.path.join(carpeta, '%(title)s.%(ext)s'),
-        'format': 'mp4'
+        'format': 'mp4',
+        'outtmpl': os.path.join(carpeta_descarga, '%(title)s.%(ext)s'),
+        'quiet': True
     }
-    with YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url)
-        archivo = ydl.prepare_filename(info)
-        return os.path.basename(archivo)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        return ydl.prepare_filename(info)
 
-def descargar_audio(url, carpeta):
+def descargar_audio(url, carpeta_descarga):
     ydl_opts = {
-        'outtmpl': os.path.join(carpeta, '%(title)s.%(ext)s'),
         'format': 'bestaudio/best',
+        'outtmpl': os.path.join(carpeta_descarga, '%(title)s.%(ext)s'),
+        'quiet': True,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
     }
-    with YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url)
-        archivo = ydl.prepare_filename(info)
-        archivo = os.path.splitext(archivo)[0] + ".mp3"
-        return os.path.basename(archivo)
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        return ydl.prepare_filename(info).replace('.webm', '.mp3')

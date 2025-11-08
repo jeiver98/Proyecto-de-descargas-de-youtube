@@ -1,14 +1,9 @@
-# app.py
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, send_file, jsonify
 from descargar_youtube import descargar_video, descargar_audio
 import os
-
-DESCARGAS = 'descargas'
+import tempfile
 
 app = Flask(__name__, template_folder='paginas')
-
-# Crear carpeta descargas si no existe
-os.makedirs(DESCARGAS, exist_ok=True)
 
 @app.route('/')
 def index():
@@ -24,22 +19,22 @@ def descargar():
         return jsonify({'mensaje': '❌ Debes ingresar una URL'}), 400
 
     try:
-        if tipo == 'video':
-            archivo = descargar_video(url, DESCARGAS)
-            return jsonify({'mensaje': '✅ Video descargado correctamente', 'link': f'/descargas/{archivo}'})
-        elif tipo == 'audio':
-            archivo = descargar_audio(url, DESCARGAS)
-            return jsonify({'mensaje': '✅ Audio descargado correctamente', 'link': f'/descargas/{archivo}'})
-        else:
-            return jsonify({'mensaje': '❌ Tipo de descarga inválido'}), 400
+        # Crear carpeta temporal
+        with tempfile.TemporaryDirectory() as temp_dir:
+            if tipo == 'video':
+                ruta_archivo = descargar_video(url, temp_dir)
+            elif tipo == 'audio':
+                ruta_archivo = descargar_audio(url, temp_dir)
+            else:
+                return jsonify({'mensaje': '❌ Tipo inválido'}), 400
+
+            # Enviar el archivo al navegador
+            nombre_archivo = os.path.basename(ruta_archivo)
+            return send_file(ruta_archivo, as_attachment=True, download_name=nombre_archivo)
+
     except Exception as e:
         print("Error al descargar:", e)
         return jsonify({'mensaje': f'❌ Error: {str(e)}'}), 500
 
-# Ruta para servir los archivos descargados
-@app.route('/descargas/<filename>')
-def descargar_archivo(filename):
-    return send_from_directory(DESCARGAS, filename, as_attachment=True)
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True)
